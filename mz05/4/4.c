@@ -2,10 +2,17 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <errno.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <dirent.h>
+#include <unistd.h>
+
+
 enum
 {
     ARR_EXTEND_MULT = 2, // resizable array extension multiplier
-    ARR_INIT_SIZE = 1 // TODO: change this value!
+    ARR_INIT_SIZE = 16 // TODO: change this value!
 };
 
 // Resizable array of strings
@@ -28,23 +35,24 @@ array_add(Array *array, char *new_str);
 // COPIES string new_str into array
 
 void
+array_sort(Array *array);
+
+void
 array_delete(Array *array);
 
 int
-main(void)
+walk_with_cd(char *root_path);
+
+int
+compare_func(const void *arg1, const void *arg2);
+
+int
+main(int argc, char *argv[])
 {
-    Array my_arr;
-    array_init(&my_arr);
-    char buff[1024];
-    while (fgets(buff, sizeof(buff), stdin)) {
-        array_add(&my_arr, buff);
-    }
-    
-    // TODO: use NAME_MAX
-    // USE lstat instead of stat
-    int n;
-    while (scanf("%d", &n) == 1) {
-        fputs(my_arr.arr[n], stdout);
+    if (argc > 1) {
+        walk_with_cd(argv[1]);
+    } else {
+        printf("Specify a path\n");
     }
     
     return 0;
@@ -96,6 +104,12 @@ array_add(Array *array, char *new_str)
     ++array->size; 
     return 1;
 }
+
+void
+array_sort(Array *array)
+{
+    qsort(array->arr, array->size, sizeof(array->arr[0]), compare_func);
+}
     
 void
 array_delete(Array *array)
@@ -103,4 +117,77 @@ array_delete(Array *array)
     for (size_t i = 0; i < array->size; ++i) {
         free(array->arr[i]);
     }
+    free(array->arr);
+}
+
+int
+walk_with_cd(char *root_path)
+{
+    DIR *cur_dir = opendir(root_path);
+    if (!cur_dir) {
+        return 1; // not an error
+    }
+
+    // Initiate the list of names of all files in this directory
+    Array array;
+    if (!array_init(&array)) {
+        return 0;
+    }
+
+    // Copy the root_path into a buffer, which will later be appended with filenames
+    char full_path[PATH_MAX];
+    strcpy(full_path, root_path);
+    size_t root_path_len = strlen(full_path);
+    full_path[root_path_len++] = '/';
+
+    while (1) {
+        // Read the next entry in the directory
+        errno = 0;
+        struct dirent *dir_entry = readdir(cur_dir);
+        if (!dir_entry) {
+            if (errno == 0) {
+                break;
+            } else {
+                return 0;
+            }
+        }
+        // Check for a couple of conditions on the name of a file
+        if (strcmp(dir_entry->d_name, ".") == 0 ||
+                strcmp(dir_entry->d_name, "..") == 0 ||
+                strlen(dir_entry->d_name) + root_path_len > PATH_MAX - 1) {
+            continue;
+        }
+        // Finally add it to the array
+        if (!array_add(&array, dir_entry->d_name)) {
+            array_delete(&array);
+            return 0;
+        }
+    }
+    closedir(cur_dir);
+
+    array_sort(&array);
+    
+    for (size_t i = 0; i < array.size; ++i) {
+        strcpy(full_path + root_path_len, array.arr[i]);
+        struct stat cur_stat;
+        int stat_ret = lstat(full_path, &cur_stat);
+        if (stat_ret == -1) {
+            continue;
+        }
+        
+        if (S_ISDIR(cur_stat.st_mode)) {
+            // Recursively process folded directories
+            printf("cd %s\n", array.arr[i]);
+            walk_with_cd(full_path); // TODO: don't enter those who I can't enter
+            printf("cd ..\n");
+        }
+    }
+    array_delete(&array);
+    return 1;
+}
+
+int
+compare_func(const void *arg1, const void *arg2)
+{
+    return strcasecmp(*(const char **) arg1, *(const char **) arg2);
 }
