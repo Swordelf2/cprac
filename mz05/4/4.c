@@ -41,7 +41,7 @@ void
 array_delete(Array *array);
 
 int
-walk_with_cd(char *root_path);
+walk_with_cd(char *root_path, char *dir_name);
 
 int
 compare_func(const void *arg1, const void *arg2);
@@ -50,7 +50,7 @@ int
 main(int argc, char *argv[])
 {
     if (argc > 1) {
-        walk_with_cd(argv[1]);
+        walk_with_cd(argv[1], NULL);
     } else {
         printf("Specify a path\n");
     }
@@ -121,11 +121,15 @@ array_delete(Array *array)
 }
 
 int
-walk_with_cd(char *root_path)
+walk_with_cd(char *root_path, char *dir_name)
 {
     DIR *cur_dir = opendir(root_path);
     if (!cur_dir) {
         return 1; // not an error
+    }
+    // Print "cd" into this dirctory
+    if (dir_name != NULL) {
+        printf("cd %s\n", dir_name);
     }
 
     // Initiate the list of names of all files in this directory
@@ -177,12 +181,14 @@ walk_with_cd(char *root_path)
         
         if (S_ISDIR(cur_stat.st_mode)) {
             // Recursively process folded directories
-            printf("cd %s\n", array.arr[i]);
-            walk_with_cd(full_path); // TODO: don't enter those who I can't enter
-            printf("cd ..\n");
+            walk_with_cd(full_path, array.arr[i]);
         }
     }
     array_delete(&array);
+    // print "cd" out of this directory
+    if (dir_name != NULL) {
+        printf("cd ..\n");
+    }
     return 1;
 }
 
