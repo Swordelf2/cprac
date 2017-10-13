@@ -92,15 +92,12 @@ array_add(Array *array, char *new_str)
             return 0;
         }
     }
+    // Copy new_str into the array
+    array->arr[array->size] = strndup(new_str, NAME_MAX + 1);
 
-    size_t len = strlen(new_str);
-    // Allocate memory for the string
-    array->arr[array->size] = malloc(len * sizeof(char) + 1);
     if (!array->arr[array->size]) {
         return 0;
     }
-    // Now copy the string into the array
-    strcpy(array->arr[array->size], new_str);
     ++array->size; 
     return 1;
 }
@@ -127,7 +124,7 @@ walk_with_cd(char *root_path, char *dir_name)
     if (!cur_dir) {
         return 1; // not an error
     }
-    // Print "cd" into this dirctory
+    // Print "cd" into this directory
     if (dir_name != NULL) {
         printf("cd %s\n", dir_name);
     }
@@ -140,9 +137,7 @@ walk_with_cd(char *root_path, char *dir_name)
 
     // Copy the root_path into a buffer, which will later be appended with filenames
     char full_path[PATH_MAX];
-    strcpy(full_path, root_path);
-    size_t root_path_len = strlen(full_path);
-    full_path[root_path_len++] = '/';
+    size_t root_path_len = snprintf(full_path, sizeof(full_path), "%s/", root_path);
 
     while (1) {
         // Read the next entry in the directory
@@ -172,6 +167,9 @@ walk_with_cd(char *root_path, char *dir_name)
     array_sort(&array);
     
     for (size_t i = 0; i < array.size; ++i) {
+        // don't need to use safe copy, becuase it is already+
+        // checked that array.arr[i] has appropriate length+
+        // and is null-terminated
         strcpy(full_path + root_path_len, array.arr[i]);
         struct stat cur_stat;
         int stat_ret = lstat(full_path, &cur_stat);
