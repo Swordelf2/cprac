@@ -8,6 +8,17 @@
 #include <stdint.h>
 #include <stdio.h>
 
+enum
+{
+    BYTE_ONE_SHIFT = 8,
+    BYTE_TWO_SHIFT = 16,
+    BYTE_THREE_SHIFT = 24,
+    BYTE_FOUR_SHIFT = 32,
+    BYTE_FIVE_SHIFT = 40,
+    BYTE_SIX_SHIFT = 48,
+    BYTE_SEVEN_SHIFT = 56
+};
+
 typedef unsigned char uchar;
 
 struct Data
@@ -75,16 +86,15 @@ main(int argc, char *argv[])
 void
 read_data(struct Data *data, uchar *cont_base)
 {
-    // warning: magic numbers
-    uint16_t ux = (uint16_t) cont_base[0] + ((uint16_t) cont_base[1] << 8);
+    uint16_t ux = (uint16_t) cont_base[0] + ((uint16_t) cont_base[1] << BYTE_ONE_SHIFT);
     uint64_t uy = (uint64_t) cont_base[2 + 0] +
-            ((uint64_t) cont_base[2 + 1] << 8) +
-            ((uint64_t) cont_base[2 + 2] << 16) +
-            ((uint64_t) cont_base[2 + 3] << 24) +
-            ((uint64_t) cont_base[2 + 4] << 32) +
-            ((uint64_t) cont_base[2 + 5] << 40) +
-            ((uint64_t) cont_base[2 + 6] << 48) +
-            ((uint64_t) cont_base[2 + 7] << 56);
+            ((uint64_t) cont_base[2 + 1] << BYTE_ONE_SHIFT) +
+            ((uint64_t) cont_base[2 + 2] << BYTE_TWO_SHIFT) +
+            ((uint64_t) cont_base[2 + 3] << BYTE_THREE_SHIFT) +
+            ((uint64_t) cont_base[2 + 4] << BYTE_FOUR_SHIFT) +
+            ((uint64_t) cont_base[2 + 5] << BYTE_FIVE_SHIFT) +
+            ((uint64_t) cont_base[2 + 6] << BYTE_SIX_SHIFT) +
+            ((uint64_t) cont_base[2 + 7] << BYTE_SEVEN_SHIFT);
     data->x = ux;
     data->y = uy;
 }
@@ -103,21 +113,20 @@ modify_data(struct Data *data, int32_t A)
 void
 write_data(const struct Data *data, uchar *cont_base)
 {
-    // warning: magic number again
     uint16_t ux = data->x;
     uint64_t uy = data->y;
 
     uint8_t mask = 0xffu;
 
     cont_base[0] = ux & mask;
-    cont_base[1] = (ux >> 8) & mask;
+    cont_base[1] = (ux >> BYTE_ONE_SHIFT) & mask;
 
     cont_base[2 + 0] = uy & mask;
-    cont_base[2 + 1] = (uy >> 8) & mask;
-    cont_base[2 + 2] = (uy >> 16) & mask;
-    cont_base[2 + 3] = (uy >> 24) & mask;
-    cont_base[2 + 4] = (uy >> 32) & mask;
-    cont_base[2 + 5] = (uy >> 40) & mask;
-    cont_base[2 + 6] = (uy >> 48) & mask;
-    cont_base[2 + 7] = (uy >> 56) & mask;
+    cont_base[2 + 1] = (uy >> BYTE_ONE_SHIFT) & mask;
+    cont_base[2 + 2] = (uy >> BYTE_TWO_SHIFT) & mask;
+    cont_base[2 + 3] = (uy >> BYTE_THREE_SHIFT) & mask;
+    cont_base[2 + 4] = (uy >> BYTE_FOUR_SHIFT) & mask;
+    cont_base[2 + 5] = (uy >> BYTE_FIVE_SHIFT) & mask;
+    cont_base[2 + 6] = (uy >> BYTE_SIX_SHIFT) & mask;
+    cont_base[2 + 7] = (uy >> BYTE_SEVEN_SHIFT) & mask;
 }
