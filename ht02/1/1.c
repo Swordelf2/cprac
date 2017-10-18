@@ -15,13 +15,14 @@ typedef struct String
     size_t max_size;
 } String;
 
-void
+// All these functions return 0 on failure
+int
 string_init(String *string);
 
-void
+int
 string_extend(String *string);
 
-void
+int
 string_append(String *string, char c);
 
 char *
@@ -32,36 +33,51 @@ getline2(FILE *f)
         return NULL;
     }
     String string;
-    string_init(&string);
+    if (!string_init(&string)) {
+        return NULL;
+    }
     while (c != EOF) {
-        string_append(&string, c);
+        if (!string_append(&string, c)) {
+            return NULL;
+        }
         if (c == '\n') {
             break;
         }
         c = getc(f);
     }
-    string_append(&string, '\0');
+    if (!string_append(&string, '\0')) {
+        return NULL;
+    }
     return string.str;
 }
 
-void
+int
 string_init(String *string)
 {
-    string->str = malloc((string->max_size = STRING_INIT_SIZE));
+    if (!(string->str = malloc((string->max_size = STRING_INIT_SIZE)))) {
+        return 0;
+    }
     string->size = 0;
+    return 1;
 }
 
-void
+int
 string_extend(String *string)
 {
-    string->str = realloc(string->str, string->max_size *= STRING_EXTEND_MUL);
+    if (!(string->str = realloc(string->str, string->max_size *= STRING_EXTEND_MUL))) {
+        return 0;
+    }
+    return 1;
 }
 
-void
+int
 string_append(String *string, char c)
 {
     if (string->size >= string->max_size) {
-        string_extend(string);
+        if (!string_extend(string)) {
+            return 0;
+        }
     }
     string->str[string->size++] = c;
+    return 1;
 }
