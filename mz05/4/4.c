@@ -137,7 +137,7 @@ walk_with_cd(char *root_path, char *dir_name)
 
     // Copy the root_path into a buffer, which will later be appended with filenames
     char full_path[PATH_MAX];
-    size_t root_path_len = snprintf(full_path, sizeof(full_path), "%s/", root_path);
+    size_t root_path_len = strlen(root_path);
 
     while (1) {
         // Read the next entry in the directory
@@ -153,7 +153,7 @@ walk_with_cd(char *root_path, char *dir_name)
         // Check for a couple of conditions on the name of a file
         if (!(strcmp(dir_entry->d_name, ".") == 0 ||
                 strcmp(dir_entry->d_name, "..") == 0 ||
-                strlen(dir_entry->d_name) + root_path_len > PATH_MAX - 1)) {
+                strlen(dir_entry->d_name) + 1 + root_path_len > PATH_MAX - 1)) {
             // Finally add it to the array
             if (!array_add(&array, dir_entry->d_name)) {
                 array_delete(&array);
@@ -169,7 +169,7 @@ walk_with_cd(char *root_path, char *dir_name)
         // don't need to use safe copy, becuase it is already+
         // checked that array.arr[i] has appropriate length+
         // and is null-terminated
-        snprintf(full_path + root_path_len, PATH_MAX - root_path_len, "%s", array.arr[i]);
+        snprintf(full_path, PATH_MAX, "%s/%s", root_path, array.arr[i]);
         struct stat cur_stat;
         int stat_ret = lstat(full_path, &cur_stat);
         
