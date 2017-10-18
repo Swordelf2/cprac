@@ -19,8 +19,6 @@ enum
     BYTE_SEVEN_SHIFT = 56
 };
 
-typedef unsigned char uchar;
-
 struct Data
 {
     int16_t x;
@@ -33,13 +31,13 @@ enum
 };
 
 void
-read_data(struct Data *data, uchar *cont_base);
+read_data(struct Data *data, unsigned char *cont_base);
 
 int
 modify_data(struct Data *data, int32_t A);
 
 void
-write_data(const struct Data *data, uchar *cont_base);
+write_data(const struct Data *data, unsigned char *cont_base);
 
 int
 main(int argc, char *argv[])
@@ -51,14 +49,14 @@ main(int argc, char *argv[])
 
     int fd = open(argv[1], O_RDWR);
     size_t file_size = lseek(fd, 0, SEEK_END);
-    uchar *file_cont = mmap(NULL, file_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+    unsigned char *file_cont = mmap(NULL, file_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
     int A = atoi(argv[2]);
 
     int size_odd = (file_size / STRUCT_SIZE) % 2;
     struct Data data1, data2;
     for (size_t i = 0; i < (file_size / STRUCT_SIZE) / 2; ++i) {
-        uchar *pos1 = file_cont + i * STRUCT_SIZE;
-        uchar *pos2 = file_cont + file_size - (i + 1) * STRUCT_SIZE;
+        unsigned char *pos1 = file_cont + i * STRUCT_SIZE;
+        unsigned char *pos2 = file_cont + file_size - (i + 1) * STRUCT_SIZE;
         read_data(&data1, pos1);
         read_data(&data2, pos2);
         if (!modify_data(&data1, A) || !modify_data(&data2, A)) {
@@ -69,7 +67,7 @@ main(int argc, char *argv[])
         write_data(&data2, pos1);
     }
     if (size_odd) {
-        uchar *pos = file_cont + (file_size / STRUCT_SIZE) / 2 * STRUCT_SIZE;
+        unsigned char *pos = file_cont + (file_size / STRUCT_SIZE) / 2 * STRUCT_SIZE;
         read_data(&data1, pos);
         if (!modify_data(&data1, A)) {
             fprintf(stderr, "Error: Arithmetic overflow\n");
@@ -84,7 +82,7 @@ main(int argc, char *argv[])
 }
 
 void
-read_data(struct Data *data, uchar *cont_base)
+read_data(struct Data *data, unsigned char *cont_base)
 {
     uint16_t ux = (uint16_t) cont_base[0] + ((uint16_t) cont_base[1] << BYTE_ONE_SHIFT);
     uint64_t uy = (uint64_t) cont_base[2 + 0] +
@@ -111,7 +109,7 @@ modify_data(struct Data *data, int32_t A)
 }
 
 void
-write_data(const struct Data *data, uchar *cont_base)
+write_data(const struct Data *data, unsigned char *cont_base)
 {
     uint16_t ux = data->x;
     uint64_t uy = data->y;
