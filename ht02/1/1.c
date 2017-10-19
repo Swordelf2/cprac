@@ -64,9 +64,12 @@ string_init(String *string)
 int
 string_extend(String *string)
 {
-    if (!(string->str = realloc(string->str, string->max_size *= STRING_EXTEND_MUL))) {
+    char *newptr = realloc(string->str, string->max_size *= STRING_EXTEND_MUL);
+    if (!newptr) {
+        free(string->str);
         return 0;
     }
+    string->str = newptr;
     return 1;
 }
 

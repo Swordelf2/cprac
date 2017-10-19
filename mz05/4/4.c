@@ -169,7 +169,7 @@ walk_with_cd(char *root_path, char *dir_name)
         // don't need to use safe copy, becuase it is already+
         // checked that array.arr[i] has appropriate length+
         // and is null-terminated
-        snprintf(full_path, PATH_MAX, "%s/%s", root_path, array.arr[i]);
+        snprintf(full_path, sizeof(full_path), "%s/%s", root_path, array.arr[i]);
         struct stat cur_stat;
         int stat_ret = lstat(full_path, &cur_stat);
         
