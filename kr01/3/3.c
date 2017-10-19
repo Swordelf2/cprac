@@ -21,7 +21,7 @@ normalize_path(char *buf)
         } else {
             *ptr1 = '/';
             ++ptr1;
-            while (*ptr2 != '/') {
+            while (*ptr2 != '/' && *ptr2 != '\0') {
                 *ptr1 = *ptr2;
                 ++ptr2;
                 ++ptr1;
