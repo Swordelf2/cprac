@@ -5,15 +5,15 @@ CFLAGS=-c -Wall -Wextra -std=gnu11 -O2
 LFLAGS=
 SRC=main.c rand.c
 OBJ=main.o rand.o
-TARGET=3
+TARGET=genrand
 
 all: $(TARGET)
 
 %.o: %.c
-	gcc $(CFLAGS) $< -o $@
+	$(CC) $(CFLAGS) $< -o $@
 
 $(TARGET): $(OBJ)
-	gcc $(LFLAGS) $^ -o $@
+	$(CC) $(LFLAGS) $^ -o $@
 
 rand.c: rand.h
 
