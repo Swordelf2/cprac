@@ -28,7 +28,7 @@ void
 string_extend(String *string);
 
 static void
-string_append(String *string, char c);
+string_append(String *string, char *buff, size_t len);
 
 int
 string_readword(String *string, FILE *in);
@@ -89,18 +89,14 @@ string_extend(String *string)
 }
 
 static void
-string_append(String *string, char c)
+string_append(String *string, char *buff, size_t len)
 {
-    if (string->size >= string->max_size) {
+    if (string->size + len > string->max_size) {
         string_extend(string);
     }
-    string->str[string->size++] = c;
-    // Check if the byte is leading
-    unsigned char uc = c;
-    int not_leading = (uc & LEFT_BIT_MASK) && !(uc & ((unsigned) LEFT_BIT_MASK >> 1));
-    if (!not_leading) {
-        ++string->cp_size;
-    }
+    memcpy(string->str + string->size, buff, len);
+    string->size += len;
+    ++string->cp_size;
 }
 
 void
@@ -118,16 +114,30 @@ string_free(String *string)
 int
 string_readword(String *string, FILE *in)
 {
-    int c;
+    int first;
     while (1) {
-        c = getc_unlocked(in);
-        if (c == EOF) {
-            return 0; // EOF is reached
-        }
-        if ((unsigned char) c <= WORD_DELIM) {
+        first = getc(in);
+        char cp[CP_MAX_SIZE];
+        cp[0] = first;
+        if (first == EOF) { 
+            return 0; // EOF is reached;
+        } else if ((unsigned char) cp[0] <= WORD_DELIM) {
             return 1; // finished reading a word
         }
-        string_append(string, c);
+        if (!(cp[0] & LEFT_BIT_MASK)) {
+            string_append(string, cp, 1);
+            continue;
+        }
+        
+        size_t cp_len;
+        for (cp_len = 1; cp_len < CP_MAX_SIZE; ++cp_len) {
+            if (((unsigned char) cp[0] << cp_len) & LEFT_BIT_MASK) {
+                cp[cp_len] = getc(in);
+            } else {
+                break;
+            }
+        }
+        string_append(string, cp, cp_len);
     }
 }
 

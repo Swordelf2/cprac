@@ -1,2 +1,2 @@
 all:
-	gcc -std=gnu11 -Wall -O2 -Wextra 2.c -o 2
+	gcc -std=gnu11 -Wall -Wextra -O2 2.c -o 2
