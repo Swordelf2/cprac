@@ -103,7 +103,7 @@ getcwd2(int fd, char *buf, size_t size)
             }
             if (buf_stat.st_ino == prev_ino && buf_stat.st_dev == prev_dev) {
                 if (!stack_push(&stack, dir_ent->d_name)) {
-                    close_dir(cur_dir);
+                    closedir(cur_dir);
                     safe_exit(saved_cur_dir, &stack);
                     return -1;
                 }
