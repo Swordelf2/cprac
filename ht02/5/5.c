@@ -46,7 +46,6 @@ getcwd2(int fd, char *buf, size_t size)
 {
     DIR *saved_cur_dir = opendir(".");
     if (!saved_cur_dir) {
-        safe_exit(saved_cur_dir, NULL);
         return -1;
     }
 
@@ -66,7 +65,10 @@ getcwd2(int fd, char *buf, size_t size)
     }
 
     Stack stack;
-    stack_init(&stack);
+    if (!stack_init(&stack)) {
+        safe_exit(saved_cur_dir, NULL);
+        return -1;
+    }
     ino_t prev_ino;
     dev_t prev_dev;
     while (1) {
@@ -95,22 +97,24 @@ getcwd2(int fd, char *buf, size_t size)
         int found_dir_flag = 0;
         while ((dir_ent = readdir(cur_dir))) {
             if (lstat(dir_ent->d_name, &buf_stat) != 0) {
+                closedir(cur_dir);
                 safe_exit(saved_cur_dir, &stack);
                 return -1;
             }
             if (buf_stat.st_ino == prev_ino && buf_stat.st_dev == prev_dev) {
                 if (!stack_push(&stack, dir_ent->d_name)) {
+                    close_dir(cur_dir);
                     safe_exit(saved_cur_dir, &stack);
                     return -1;
                 }
                 found_dir_flag = 1;
             }
         }
+        closedir(cur_dir);
         if (!found_dir_flag) {
             safe_exit(saved_cur_dir, &stack);
             return -1;
         }
-        closedir(cur_dir);
     }
 
     if (stack_isempty(&stack)) {
@@ -158,7 +162,7 @@ int
 stack_extend(Stack *stack)
 {
     stack->max_size *= STCK_EXTEND_MUL;
-    char **new_ptr = realloc(stack->arr, stack->max_size);
+    char **new_ptr = realloc(stack->arr, stack->max_size * sizeof(stack->arr[0]));
     if (!new_ptr) {
         return 0;
     }

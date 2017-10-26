@@ -10,7 +10,7 @@ ssize_t getcwd2(int fd, char *buf, size_t size);
 
 enum
 {
-    BUFF_SIZE = 100
+    BUFF_SIZE = 1024
 };
 
 int
