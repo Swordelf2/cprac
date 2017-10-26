@@ -120,8 +120,8 @@ getcwd2(int fd, char *buf, size_t size)
     if (stack_isempty(&stack)) {
         int pr_ret;
         pr_ret = snprintf(buf, size, "/");
+        safe_exit(saved_cur_dir, &stack);
         if (pr_ret < 0) {
-            safe_exit(saved_cur_dir, &stack);
             return -1;
         }
         return 1;
