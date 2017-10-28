@@ -43,21 +43,16 @@ string_print(String *string, int out_fd);
 void
 string_free(String *string);
 
-void
-safe_exit(String *string1, String *string2, int fd);
-
-
 int
 main(int argc, char *argv[])
 {
-    //TODO: don't do anything if the file is empty
     if (argc < 2) {
         return -1;
     }
     
     int fd = open(argv[FNAME_ARG_POS], O_RDONLY);
     if (fd == -1) {
-        return -1;
+        goto exit;
     }
     
     off_t cur_offset = 0;
@@ -65,8 +60,7 @@ main(int argc, char *argv[])
     String cur_string, max_string;
     int max_string_init = 0;
     if (!string_init(&cur_string) || !string_init(&max_string)) {
-        safe_exit(&cur_string, &max_string, fd);
-        return -1;
+        goto cleanup;
     }
         
     while (1) {
@@ -78,16 +72,14 @@ main(int argc, char *argv[])
             // note that 0 here may indicate that the whoe file is empty,+
             // which is not an error
             if (br_add <= 0) {
-                safe_exit(&cur_string, &max_string, fd);
-                return 0;
+                goto cleanup;
             }
             br_count += br_add;
         }
         // Now read the string
         size_t len = * (uint16_t *) buf;
         if (!string_read(&cur_string, fd, len)) {
-            safe_exit(&cur_string, &max_string, fd);
-            return -1;
+            goto cleanup;
         }
         // Compare current string to max_string
         if (!max_string_init || (string_compare(&cur_string, &max_string) > 0)) {
@@ -106,10 +98,14 @@ main(int argc, char *argv[])
     }
 
     if (!string_print(&max_string, 1)) {
-        safe_exit(&max_string, &cur_string, fd);
-        return -1;
+        goto cleanup;
     }
-    safe_exit(&max_string, &cur_string, fd);
+    
+cleanup:
+    string_free(&max_string);
+    string_free(&cur_string);
+    close(fd);
+exit:
     return 0;
 }
 
@@ -186,16 +182,4 @@ void
 string_free(String *string)
 {
     free(string->str);
-}
-
-void
-safe_exit(String *string1, String *string2, int fd)
-{
-    if (string1) {
-        string_free(string1);
-    }
-    if (string2) {
-        string_free(string2);
-    }
-    close(fd);
 }
