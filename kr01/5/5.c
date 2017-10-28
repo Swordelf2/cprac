@@ -183,7 +183,7 @@ string_assign(String *string, char *str)
             return 0;
         }
     }
-    strcpy(string->str, str); // TODO: MISTAKE HERE ('\1' in the end??)
+    strcpy(string->str, str); // TODO: MISTAKE HERE ('\0' in the end??)
     string->size = len;
     return 1;
 }
