@@ -53,9 +53,6 @@ string_free(String *string);
 static size_t
 min(size_t a, size_t b);
 
-static void
-print_error(void);
-
 int
 main(int argc, char *argv[])
 {
@@ -80,15 +77,14 @@ main(int argc, char *argv[])
     off_t max_file_size = 0;
     int max_init_flag = 0;
     struct dirent *dir_ent;
-    unsigned long long sum_size = 0;
+    long long sum_size = 0;
     while (1) {
         errno = 0;
         dir_ent = readdir(dir);
         // Error handling
         if (!dir_ent) {
             if (errno != 0) {
-                print_error();
-                goto cleanup_str;
+                continue;
             } else {
                 // All dir_ents are read
                 break;
@@ -111,8 +107,7 @@ main(int argc, char *argv[])
         
         struct stat file_stat;
         if (lstat(file_full_path, &file_stat) != 0) {
-            print_error();
-            goto cleanup_str;
+            continue;
         }
         if (S_ISREG(file_stat.st_mode)) {
             sum_size += file_stat.st_size;
@@ -136,8 +131,9 @@ main(int argc, char *argv[])
     }
     
     // TODO: max size allowed may be a negative value
-    if (sum_size > strtoull(argv[SIZE_ARG_POS], NULL, 10) && max_init_flag) {
+    if (sum_size > strtoll(argv[SIZE_ARG_POS], NULL, 10) && max_init_flag) {
         string_print(&min_name);
+        putchar('\n');
     }
 
 cleanup_str:
@@ -183,7 +179,7 @@ string_assign(String *string, char *str)
             return 0;
         }
     }
-    strcpy(string->str, str); // TODO: MISTAKE HERE ('\0' in the end??)
+    memcpy(string->str, str, len);
     string->size = len;
     return 1;
 }
@@ -234,10 +230,4 @@ static size_t
 min(size_t a, size_t b)
 {
     return a < b ? a : b;
-}
-
-static void
-print_error(void)
-{
-    fputs(strerror(errno), stderr);
 }
