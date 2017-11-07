@@ -13,7 +13,6 @@
 typedef struct String
 {
     char *str;
-    size_t size;
     size_t max_size;
 } String;
 
@@ -50,9 +49,6 @@ string_print(String *string);
 void
 string_free(String *string);
 
-static size_t
-min(size_t a, size_t b);
-
 int
 main(int argc, char *argv[])
 {
@@ -64,7 +60,9 @@ main(int argc, char *argv[])
         goto exit;
     }
 
-    String suffix, min_name, cur_name;
+    String suffix = {0};
+    String min_name = {0};
+    String cur_name = {0};
     if (!string_init(&suffix) || !string_init(&min_name) || !string_init(&cur_name)) {
         goto cleanup_str;
     }
@@ -154,7 +152,6 @@ string_init(String *string)
     if (!string->str) {
         return 0;
     }
-    string->size = 0;
     return 1;
 }
 
@@ -174,40 +171,27 @@ int
 string_assign(String *string, char *str)
 {
     size_t len = strlen(str);
-    while (string->max_size < len) {
+    while (string->max_size < len + 1) {
         if (!string_extend(string)) {
             return 0;
         }
     }
-    memcpy(string->str, str, len);
-    string->size = len;
+    strcpy(string->str, str);
     return 1;
 }
 
 int
 string_compare(String *string1, String *string2)
 {
-    int cmp_ret = strncmp(string1->str, string2->str, min(string1->size, string2->size));
-    if (cmp_ret == 0) {
-        if (string1->size > string2->size) {
-            return 1;
-        }
-        if (string1->size < string2->size) {
-            return -1;
-        }
-        return 0;
-    }
-    return cmp_ret;
+    return strcmp(string1->str, string2->str);
 }
 
 int
 string_has_suffix(String *string, String *suffix)
 {
-    if (string->size < suffix->size) {
-        return 0;
-    }
-    // compare last suffix->size bytes of string with suffix
-    if (strncmp(string->str + string->size - suffix->size, suffix->str, suffix->size) == 0) {
+    size_t str_len = strlen(string->str);
+    size_t suff_len = strlen(suffix->str);
+    if (str_len >= suff_len && strcmp(string->str + str_len - suff_len, suffix->str) == 0) {
         return 1;
     } else {
         return 0;
@@ -217,17 +201,11 @@ string_has_suffix(String *string, String *suffix)
 void
 string_print(String *string)
 {
-    fwrite(string->str, 1, string->size, stdout);
+    fputs(string->str, stdout);
 }
 
 void
 string_free(String *string)
 {
     free(string->str);
-}
-
-static size_t
-min(size_t a, size_t b)
-{
-    return a < b ? a : b;
 }

@@ -19,9 +19,6 @@ struct RandomOperations
 struct RandomGenerator
 {
     unsigned curX;
-    unsigned mul;
-    unsigned incr;
-    unsigned mod;
     RandomOperations *ops;
 
 };
@@ -41,9 +38,6 @@ RandomGenerator *random_create(int seed)
 {
     RandomGenerator *new = malloc(sizeof(RandomGenerator));
     new->curX = seed;
-    new->mul = RR_MUL;
-    new->incr = RR_INCR;
-    new->mod = RR_MOD;
     new->ops = &operations;
     return new;
 }
@@ -51,7 +45,7 @@ RandomGenerator *random_create(int seed)
 unsigned
 random_generator_next(RandomGenerator *rr)
 {
-    return rr->curX = (rr->mul * rr->curX + rr->incr) % rr->mod;
+    return rr->curX = (RR_MUL * rr->curX + RR_INCR) % RR_MOD;
 }
 
 void

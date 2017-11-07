@@ -14,9 +14,6 @@ struct RandomOperations
 struct RandomGenerator
 {
     unsigned curX;
-    unsigned mul;
-    unsigned incr;
-    unsigned mod;
     RandomOperations *ops;
 
 };
