@@ -7,17 +7,18 @@
 
 enum
 {
-    MAX_STR_SIZE = 8 + 1
+    MAX_STR_SIZE = 8
 };
 
 int
 main(void)
 {
-    setvbuf(stdin, NULL, _IOFBF, 0);
+    setvbuf(stdin, NULL, _IONBF, 0);
     char str[MAX_STR_SIZE];
     for (int i = 1; i <= 3; ++i) {
         if (fork() == 0) {
-            fgets(str, sizeof(str), stdin);
+            read(0, str, sizeof(str));
+            str[sizeof(str) - 1] = '\0';
             int a = strtol(str, NULL, 10);
             printf("%d %lld\n", i, (long long) a * a);
             exit(0);
