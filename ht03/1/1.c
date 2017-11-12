@@ -44,7 +44,7 @@ main(int argc, char *argv[])
         print_error("Invalid line1 argument");
         goto exit;
     }
-    if (*argv[ARG_POS_LINE_ONE] == '\0' || (*end_ptr != '\0' && *end_ptr != ' ')) { 
+    if (*argv[ARG_POS_LINE_ONE] == '\0' || *end_ptr != '\0') { 
         fail_flag = 1;
         fputs("Invalid line1 argument\n", stderr);
         goto exit;
@@ -61,7 +61,7 @@ main(int argc, char *argv[])
         print_error("Invalid line2 argument");
         goto exit;
     }
-    if (*argv[ARG_POS_LINE_TWO] == '\0' || (*end_ptr != '\0' && *end_ptr != ' ')) {
+    if (*argv[ARG_POS_LINE_TWO] == '\0' || *end_ptr != '\0') {
         fail_flag = 1;
         fputs("Invalid line2 argument\n", stderr);
         goto exit;
@@ -96,6 +96,10 @@ main(int argc, char *argv[])
         fputs("The file is too large", stderr);
         goto cleanup_file;
     }
+    if (file_size == 0) {
+        // Do nothing
+        goto cleanup_file;
+    }
     // Map the file
     char *base = mmap(NULL, file_size, PROT_READ, MAP_PRIVATE, fd, 0);
     if (base == MAP_FAILED) {
@@ -106,7 +110,7 @@ main(int argc, char *argv[])
 
     // Shift line1 and line2 so that they become 0-indexed
     --line1; --line2;
-    // Skip first (line2 - 1) lines
+    // Skip first line2 lines
     char *ptr = base;
     long i;
     for (i = 0; i < line2 && ptr - base < file_size; ++i) {
@@ -131,7 +135,11 @@ main(int argc, char *argv[])
         print_line(ptr);
     }
 
-    munmap(base, file_size);
+    if (munmap(base, file_size) == -1) {
+        fail_flag = 1;
+        print_error("Could not unmap file");
+        goto cleanup_file;
+    }
 cleanup_file:
     close(fd);
 exit:
