@@ -22,6 +22,9 @@ enum
 void
 print_error(const char *error_str);
 
+void
+print_line(const char *line_start);
+
 int
 main(int argc, char *argv[])
 {
@@ -41,14 +44,14 @@ main(int argc, char *argv[])
         print_error("Invalid line1 argument");
         goto exit;
     }
-    if (line1 <= 0) {
-        fail_flag = 1;
-        fputs("Invalid line1 argument: Non-positive value\n", stderr);
-        goto exit;
-    }
     if (*argv[ARG_POS_LINE_ONE] == '\0' || (*end_ptr != '\0' && *end_ptr != ' ')) { 
         fail_flag = 1;
         fputs("Invalid line1 argument\n", stderr);
+        goto exit;
+    }
+    if (line1 <= 0) {
+        fail_flag = 1;
+        fputs("Invalid line1 argument: Non-positive value\n", stderr);
         goto exit;
     }
     errno = 0;
@@ -58,18 +61,14 @@ main(int argc, char *argv[])
         print_error("Invalid line2 argument");
         goto exit;
     }
-    if (line2 <= 0) {
-        fail_flag = 1;
-        fputs("Invalid line2 argument: Non-positive value\n", stderr);
-        goto exit;
-    }
     if (*argv[ARG_POS_LINE_TWO] == '\0' || (*end_ptr != '\0' && *end_ptr != ' ')) {
         fail_flag = 1;
         fputs("Invalid line2 argument\n", stderr);
         goto exit;
     }
-    // Simple check
-    if (line1 >= line2) {
+    if (line2 <= 0) {
+        fail_flag = 1;
+        fputs("Invalid line2 argument: Non-positive value\n", stderr);
         goto exit;
     }
     // Open file
@@ -79,11 +78,22 @@ main(int argc, char *argv[])
         print_error("Could not open file");
         goto exit;
     }
+    struct stat file_stat;
+    if (fstat(fd, &file_stat) == -1) {
+        fail_flag = 1;
+        print_error("Could not retrive file stat");
+        goto cleanup_file;
+    }
+    if (!S_ISREG(file_stat.st_mode)) {
+        fail_flag = 1;
+        fputs("The file is not regular\n", stderr);
+        goto cleanup_file;
+    }
     // Retrieve file size
-    off_t file_size = lseek(fd, 0, SEEK_END);
+    off_t file_size = file_stat.st_size;
     if ((unsigned long long) file_size > SIZE_MAX) {
         fail_flag = 1;
-        print_error("File size is too large");
+        fputs("The file is too large", stderr);
         goto cleanup_file;
     }
     // Map the file
@@ -94,36 +104,32 @@ main(int argc, char *argv[])
         goto cleanup_file;
     }
 
-    // Skip first (line1 - 1) lines
+    // Shift line1 and line2 so that they become 0-indexed
+    --line1; --line2;
+    // Skip first (line2 - 1) lines
     char *ptr = base;
-    for (long i = 0; i < line1 - 1 && ptr - base < file_size; ++i) {
-        while (*ptr != '\n' && ptr - base < file_size) {
-            ++ptr;
-        }
-        ++ptr;
-    }
-
-    // Store pointers to next (line2 - line1) lines
-    char **ptr_arr = malloc((line2 - line1) * sizeof(*ptr_arr));
     long i;
-    for (i = 0; i < line2 - line1 && ptr - base < file_size; ++i) {
-        ptr_arr[i] = ptr;
-        while (*ptr != '\n' && ptr - base < file_size) {
+    for (i = 0; i < line2 && ptr - base < file_size; ++i) {
+        while (*ptr != '\n') {
+            if (ptr - base >= file_size) {
+                fail_flag = 1;
+                fputs("Last line doesn't end with a newline character\n", stderr);
+                goto cleanup_file;
+            }
             ++ptr;
         }
         ++ptr;
     }
-    long arr_size = i;
-
-    // Print all lines in reverse order
-    for (i = arr_size - 1; i >= 0; --i) {
-        ptr = ptr_arr[i];
-        do {
-            putchar(*ptr);
-            ++ptr;
-        } while (ptr[-1] != '\n');
+    // now i == lines skipped
+    long lines_skipped = i;
+    // In a loop we move to the previous line and print it
+    for (i = lines_skipped - 1; i >= line1; --i) {
+        --ptr;
+        while (ptr != base && ptr[-1] != '\n') {
+            --ptr;
+        }
+        print_line(ptr);
     }
-    free(ptr_arr);
 
     munmap(base, file_size);
 cleanup_file:
@@ -137,4 +143,14 @@ void
 print_error(const char *error_str)
 {
     fprintf(stderr, "%s: %s\n", error_str, strerror(errno));
+}
+
+void
+print_line(const char *line_start)
+{
+    const char *ptr = line_start;
+    do {
+        putchar(*ptr);
+        ++ptr;
+    } while (ptr[-1] != '\n');
 }
