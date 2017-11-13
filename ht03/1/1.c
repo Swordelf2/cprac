@@ -22,9 +22,6 @@ enum
 void
 print_error(const char *error_str);
 
-void
-print_line(const char *line_start);
-
 int
 main(int argc, char *argv[])
 {
@@ -114,12 +111,7 @@ main(int argc, char *argv[])
     char *ptr = base;
     long i;
     for (i = 0; i < line2 && ptr - base < file_size; ++i) {
-        while (*ptr != '\n') {
-            if (ptr - base >= file_size) {
-                fail_flag = 1;
-                fputs("Last line doesn't end with a newline character\n", stderr);
-                goto cleanup_file;
-            }
+        while (*ptr != '\n' && ptr - base < file_size) {
             ++ptr;
         }
         ++ptr;
@@ -132,7 +124,11 @@ main(int argc, char *argv[])
         while (ptr != base && ptr[-1] != '\n') {
             --ptr;
         }
-        print_line(ptr);
+        char *line_ptr = ptr;
+        do {
+            putchar(*line_ptr);
+            ++line_ptr;
+        } while (line_ptr - base < file_size && line_ptr[-1] != '\n');
     }
 
     if (munmap(base, file_size) == -1) {
@@ -144,21 +140,11 @@ cleanup_file:
     close(fd);
 exit:
     return fail_flag;
-    // skip first (line1 - 1) 
+    // skip first (line2 - 1) 
 }
 
 void
 print_error(const char *error_str)
 {
     fprintf(stderr, "%s: %s\n", error_str, strerror(errno));
-}
-
-void
-print_line(const char *line_start)
-{
-    const char *ptr = line_start;
-    do {
-        putchar(*ptr);
-        ++ptr;
-    } while (ptr[-1] != '\n');
 }
