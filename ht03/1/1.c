@@ -128,7 +128,11 @@ main(int argc, char *argv[])
         do {
             putchar(*line_ptr);
             ++line_ptr;
-        } while (line_ptr - base < file_size && line_ptr[-1] != '\n');
+            if (line_ptr - base >= file_size) {
+                putchar('\n');
+                break;
+            }
+        } while (line_ptr[-1] != '\n');
     }
 
     if (munmap(base, file_size) == -1) {
@@ -140,7 +144,7 @@ cleanup_file:
     close(fd);
 exit:
     return fail_flag;
-    // skip first (line2 - 1) 
+    // skip first (line1 - 1) 
 }
 
 void
