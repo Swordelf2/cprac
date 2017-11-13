@@ -12,7 +12,7 @@ enum
     PROC_COUNT = 2,
     BLOCK_COUNT = 2,
     PROC_TO_RUN_IND = 0,
-    NEXT_NUMBER_IND = 1
+    NEXT_NUMBER_IND = 1,
 };
 
 int
@@ -20,11 +20,16 @@ main(int argc, char *argv[])
 {
     int N = strtol(argv[1], NULL, DEC_BASE);
 
-    int *shared_mem = mmap(NULL, BLOCK_COUNT * sizeof(int), PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+    volatile int *shared_mem = mmap(NULL, 
+            BLOCK_COUNT * sizeof(int),
+            PROT_READ | PROT_WRITE,
+            MAP_SHARED | MAP_ANONYMOUS,
+            -1,
+            0);
     shared_mem[PROC_TO_RUN_IND] = 1; // process 1 will start first
     shared_mem[NEXT_NUMBER_IND] = 1;
     int proc_id;
-    for (proc_id = 1; proc_id <= 2; ++proc_id) {
+    for (proc_id = 1; proc_id <= PROC_COUNT; ++proc_id) {
         if (fork() == 0) {
             int exit_flag = 0;
             while (!exit_flag) {
@@ -52,6 +57,6 @@ main(int argc, char *argv[])
     }
     wait(NULL);
     wait(NULL);
-    munmap(shared_mem, 1);
+    munmap((void *) shared_mem, 1);
     return 0;
 }
