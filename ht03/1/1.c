@@ -129,7 +129,9 @@ main(int argc, char *argv[])
             putchar(*line_ptr);
             ++line_ptr;
             if (line_ptr - base >= file_size) {
-                putchar('\n');
+                if (line_ptr[-1] != '\n') {
+                    putchar('\n');
+                }
                 break;
             }
         } while (line_ptr[-1] != '\n');
