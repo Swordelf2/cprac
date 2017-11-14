@@ -3,3 +3,6 @@
 
 prod: prod.c
 	gcc -g -std=gnu11 -Wall -Wextra $< -lm -o $@
+
+fm: fm.c
+	gcc -std=gnu11 -Wall -Wextra -O2 $< -o $@
