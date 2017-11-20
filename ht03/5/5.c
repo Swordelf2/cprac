@@ -49,8 +49,8 @@ main(int argc, char *argv[])
                     } else {
                         shared_mem[PROC_TO_RUN_IND] = 1;
                     }
-                    sched_yield();
                 }
+                sched_yield();
             }
             exit(0);
         }
