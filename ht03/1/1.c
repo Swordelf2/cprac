@@ -109,7 +109,7 @@ main(int argc, char *argv[])
     --line1; --line2;
     // Skip first line2 lines
     char *ptr = base;
-    long i;
+    ssize_t i;
     for (i = 0; i < line2 && ptr - base < file_size; ++i) {
         while (*ptr != '\n' && ptr - base < file_size) {
             ++ptr;
@@ -117,7 +117,7 @@ main(int argc, char *argv[])
         ++ptr;
     }
     // now i == lines skipped
-    long lines_skipped = i;
+    ssize_t lines_skipped = i;
     // In a loop we move to the previous line and print it
     for (i = lines_skipped - 1; i >= line1; --i) {
         --ptr;
