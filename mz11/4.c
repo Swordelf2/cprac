@@ -6,7 +6,7 @@
 #include <stdlib.h>
 
 int opid;
-volatile int flag;
+volatile int flag = 0;
 
 void
 handler(int a)
@@ -15,22 +15,24 @@ handler(int a)
 }
 
 void
-work(int myid, int fd_rd, int fd_wr, int max_num)
+work(int myid, int fd_rd, int fd_wr, int max_num, sigset_t set_prev)
 {
-    sigset_t set, set_prev;
-    sigemptyset(&set);
-    sigaddset(&set, SIGUSR1);
-    sigprocmask(SIG_BLOCK, &set, &set_prev);
-    sigaction(SIGUSR1, &(struct sigaction) {.sa_handler = handler}, NULL);
-
     FILE *p_in = fdopen(fd_rd, "r");
     FILE *p_out = fdopen(fd_wr, "w");
-
     while (!flag) {
         sigsuspend(&set_prev);
     }
+    flag = 0;
 
-    fscanf(p_in, "%d ", &opid);
+    fscanf(p_in, "%d", &opid);
+    if (myid == 1) {
+        fprintf(p_out, "%d ", getpid());
+        fflush(p_out);
+    } else if (myid == 2) {
+        fprintf(p_out, "1");
+        fflush(p_out);
+    }
+
     kill(opid, SIGUSR1);
 
     while (1) {
@@ -40,7 +42,7 @@ work(int myid, int fd_rd, int fd_wr, int max_num)
         flag = 0;
         int x;
         int sc_res;
-        sc_res = fscanf(p_in, "%d ", &x);
+        sc_res = fscanf(p_in, "%d", &x);
         if (sc_res != 1 || x == max_num) {
             break;
         }
@@ -57,25 +59,31 @@ work(int myid, int fd_rd, int fd_wr, int max_num)
 int
 main(int argc, char *argv[])
 {
+    sigset_t set, set_prev;
+    sigemptyset(&set);
+    sigaddset(&set, SIGUSR1);
+    sigprocmask(SIG_BLOCK, &set, &set_prev);
+    sigaction(SIGUSR1, &(struct sigaction) {.sa_handler = handler, .sa_flags = SA_RESTART}, NULL);
     int fd[2];
     pipe(fd);
     pid_t ch1, ch2;
 
     if ((ch1 = fork()) == 0) {
-        work(1, fd[0], fd[1], strtol(argv[0], NULL, 0));
+        work(1, fd[0], fd[1], strtol(argv[1], NULL, 0), set_prev);
         exit(0);
     }
     if ((ch2 = fork()) == 0) {
-        work(2, fd[0], fd[1], strtol(argv[0], NULL, 0));
+        work(2, fd[0], fd[1], strtol(argv[1], NULL, 0), set_prev);
         exit(0);
     }
     close(fd[0]);
     FILE *p_out = fdopen(fd[1], "w");
-    fprintf(p_out, "%d %d ", ch2, ch1);
+    fprintf(p_out, "%d ", ch2);
+    fflush(p_out);
     fclose(p_out);
     kill(ch1, SIGUSR1);
     wait(NULL);
     wait(NULL);
     printf("Done\n");
+    return 0;
 }
-
