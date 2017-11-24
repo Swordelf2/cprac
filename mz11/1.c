@@ -2,10 +2,15 @@
 #include <signal.h>
 #include <unistd.h>
 
-void
-handler(int a)
-{
+int a;
 
+void
+handler(int sig)
+{
+    if (a != 4) {
+        printf("%d\n", a);
+        fflush(stdout);
+    }
 }
 
 int
@@ -16,15 +21,10 @@ main(void)
     sigemptyset(&set);
     sigaddset(&set, SIGINT);
     sigprocmask(SIG_BLOCK, &set, &dfl_set);
-    int a = 0;
     printf("%d\n", getpid());
     fflush(stdout);
-    for (; a < 5; ++a) {
+    for (a = 0; a < 5; ++a) {
         sigsuspend(&dfl_set);
-        if (a != 4) {
-            printf("%d\n", a);
-            fflush(stdout);
-        }
     }
     return 0;
 }

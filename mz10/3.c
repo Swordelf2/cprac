@@ -28,8 +28,7 @@ main(int argc, char *argv[])
     } else {
         close(fd[1]);
         if (fork() == 0) { // 4
-            int fd2 = open(argv[5], O_CREAT | O_WRONLY, 0644);
-            lseek(fd2, 0, SEEK_END);
+            int fd2 = open(argv[5], O_CREAT | O_WRONLY | O_APPEND, 0644);
             dup2(fd[0], 0);
             close(fd[0]);
             dup2(fd2, 1);
