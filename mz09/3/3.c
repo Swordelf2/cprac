@@ -13,7 +13,7 @@ mysys(const char *str)
     pid_t child_pid = fork();
     if (child_pid == 0) {
         execlp("sh", "sh", "-c", str, NULL);
-        return -1;
+        _exit(128);
     } else if (child_pid == -1) {
         return -1;
     } else {
@@ -23,8 +23,9 @@ mysys(const char *str)
             int ex_status = WEXITSTATUS(status);
             if (ex_status >= 0 && ex_status <= 127) {
                 return ex_status;
-            } else
+            } else {
                 return -1;
+            }
         } else if (WIFSIGNALED(status)) {
             return 128 + WTERMSIG(status);
         } else {
