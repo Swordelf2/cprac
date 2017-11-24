@@ -7,10 +7,10 @@
 int
 main(void)
 {
-    long long a;
+    int a;
     int flag = 0;
 
-    while (scanf("%lld", &a) == 1) {
+    while (scanf("%d", &a) == 1) {
         pid_t pid = fork();
         if (pid == -1) {
             printf("-1\n");
@@ -25,7 +25,7 @@ main(void)
                     exit(-1);
                 }
             } else {
-                printf("%lld\n", a);
+                printf("%d\n", a);
                 exit(0);
             }
         }
