@@ -3,25 +3,31 @@
 
 enum
 {
-    MAX_STR_SIZE = 8192,
+    BUFF_SIZE = 8192,
+    SHIFT_LENGTH = 22,
+    TABLE_SIZE = 1024,
     PAGE_SIZE = 4096
 };
 
 int
 main(void)
 {
-    char str[MAX_STR_SIZE];
-    uint32_t sum_size = 0;
-    
-    unsigned page_count = 0;
-
+    char str[BUFF_SIZE];
+    uint32_t left, right, last;
+    last = 0;
+    unsigned t_count = 0; // tables count;
     while (fgets(str, sizeof(str), stdin)) {
-        uint32_t left, right;
         sscanf(str, "%x-%x", &left, &right);
-        sum_size += right - left;
-        page_count += (right - left - 1) / PAGE_SIZE + 1;
+        --right;
+        left >>= SHIFT_LENGTH;
+        right >>= SHIFT_LENGTH;
+        t_count += right - left + 1;
+        if (left == last && last != 0) {
+            --t_count;
+        }
+        last = right;
     }
 
-    printf("%u\n", page_count);
+    printf("%u\n", (t_count + 1) * PAGE_SIZE);
     return 0;
 }

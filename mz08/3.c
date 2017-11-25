@@ -7,7 +7,8 @@
 
 enum
 {
-    MAX_STR_SIZE = 8
+    MAX_STR_SIZE = 8,
+    DEC_BASE = 10
 };
 
 int
@@ -19,7 +20,7 @@ main(void)
         if (fork() == 0) {
             read(0, str, sizeof(str));
             str[sizeof(str) - 1] = '\0';
-            int a = strtol(str, NULL, 10);
+            int a = strtol(str, NULL, DEC_BASE);
             printf("%d %lld\n", i, (long long) a * a);
             exit(0);
         }

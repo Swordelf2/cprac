@@ -6,7 +6,7 @@
 #include <stdlib.h>
 
 void
-start_execution(char *file_name);
+start_execution(const char *file_name);
 
 int
 main(int argc, char *argv[])
@@ -37,7 +37,7 @@ main(int argc, char *argv[])
 
 
 void
-start_execution(char *file_name)
+start_execution(const char *file_name)
 {
     FILE *f = fopen(file_name, "r");
     char ex_name[PATH_MAX + 1];

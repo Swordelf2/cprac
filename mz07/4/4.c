@@ -32,13 +32,13 @@ random_generator_next(RandomGenerator *rr);
 void
 random_generator_destroy(RandomGenerator *rr);
 
-RandomOperations operations = {random_generator_next, random_generator_destroy};
+const RandomOperations operations = {random_generator_next, random_generator_destroy};
 
 RandomGenerator *random_create(int seed)
 {
-    RandomGenerator *new = malloc(sizeof(RandomGenerator));
+    RandomGenerator *new = malloc(sizeof(*new));
     new->curX = seed;
-    new->ops = &operations;
+    new->ops = (void *) &operations;
     return new;
 }
 

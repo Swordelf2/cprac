@@ -31,7 +31,16 @@ exec_command(char *command)
 int
 main(int argc, char *argv[])
 {
-    return !((!exec_command(argv[1]) || 
-            !exec_command(argv[2])) 
-            && !exec_command(argv[3]));
+    int a = exec_command(argv[1]);
+    if (a != 0) {
+        a = exec_command(argv[2]);
+    }
+    if (a == 0) {
+        a = exec_command(argv[3]);
+    }
+    if (a == 0) {
+        return 0;
+    } else {
+        return 1;
+    }
 }

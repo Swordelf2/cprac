@@ -40,16 +40,64 @@ main(int argc, char *argv[])
     }
     ftruncate(out_fd, N * N * sizeof(double));
     double *in_mem = mmap(NULL, file_size,
-            PROT_WRITE | PROT_READ, MAP_SHARED, in_fd, 0);
+            PROT_READ, MAP_SHARED, in_fd, 0);
     close(in_fd);
     double *out_mem = mmap(NULL, file_size,
-            PROT_WRITE | PROT_READ, MAP_SHARED, out_fd, 0);
+            PROT_WRITE, MAP_SHARED, out_fd, 0);
     close(out_fd);
 
     if (P > N) {
         P = larger2power(N);
     }
 
+
+    double *cur_mat = mmap(NULL, file_size,
+            PROT_WRITE | PROT_READ, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+    double *cur_mul_mat = mmap(NULL, file_size,
+            PROT_WRITE | PROT_READ, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+    double *cur_mat_tmp = mmap(NULL, file_size,
+            PROT_WRITE | PROT_READ, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+    double *cur_mul_mat_tmp = mmap(NULL, file_size,
+            PROT_WRITE | PROT_READ, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+    // Init cur_mul_mat
+    memcpy(cur_mul_mat, in_mem, file_size);
+    // Init cur_mat
+    for (int i = 0; i < N - 1; ++i) {
+        for (int j = i + 1; j < N; ++j) {
+            cur_mat[i * N + j] = cur_mat[j * N + i] = +INFINITY;
+        }
+    }
+    for (int i = 0; i < N; ++i) {
+        cur_mat[i * N + i] = 0;
+    }
+
+    while (P) {
+        if (P % 2) {
+            MatrixMul(cur_mat_tmp, cur_mat, cur_mul_mat, N);
+            // Swap
+            double *tmp = cur_mat_tmp;
+            cur_mat_tmp = cur_mat;
+            cur_mat = tmp;
+            --P;
+        } else {
+            MatrixMul(cur_mul_mat_tmp, cur_mul_mat, cur_mul_mat, N);
+            // Swap
+            double *tmp = cur_mul_mat_tmp;
+            cur_mul_mat_tmp = cur_mul_mat;
+            cur_mul_mat = tmp;
+            P /= 2;
+        }
+    }
+    memcpy(out_mem, cur_mat, file_size);
+    munmap(cur_mat, file_size);
+    munmap(cur_mat_tmp, file_size);
+    munmap(cur_mul_mat, file_size);
+    munmap(cur_mul_mat_tmp, file_size);
+    
+    munmap(in_mem, file_size);
+    munmap(out_mem, file_size);
+    return 0;
+}
        
 int
 larger2power(int x)
@@ -58,7 +106,7 @@ larger2power(int x)
     while (tmp < x) {
         tmp <<= 1;
     }
-    return tmp
+    return tmp;
 }
 
 void
@@ -74,12 +122,12 @@ MatrixMul(double *mat_dest, double *mat1, double *mat2, int N)
         for (int j = i + 1; j < N; ++j) {
             double min_val = +INFINITY;
             for (int s = 0; s < N; ++s) {
-                double sum = mat1[i * N + s] + mat2[j + N + s];
-                if (sum < min) {
-                    sum = min;
+                double sum = mat1[i * N + s] + mat2[j * N + s];
+                if (sum < min_val) {
+                    min_val = sum;
                 }
             }
-            mat_dest[i * N + j] = mat_dest[j * N + i] = min;
+            mat_dest[i * N + j] = mat_dest[j * N + i] = min_val;
         }
     }
-
+}

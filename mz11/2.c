@@ -8,19 +8,18 @@ enum handle_type
     SQR
 };
 
-volatile int
-h_type = REVERT;
+volatile int h_type = REVERT;
 
 void
 handler1(int a)
 {
-    h_type = 0;
+    h_type = REVERT;
 }
 
 void
 handler2(int a)
 {
-    h_type = 1;
+    h_type = SQR;
 }
 
 int
