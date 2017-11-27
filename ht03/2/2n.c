@@ -34,10 +34,7 @@ main(int argc, char *argv[])
     struct stat file_stat;
     fstat(in_fd, &file_stat);
     size_t file_size = file_stat.st_size;
-    int N = 1;
-    while ((unsigned) N * N < file_size / sizeof(double)) {
-        ++N;
-    }
+    int N = sqrt(file_size / sizeof(double));
     ftruncate(out_fd, N * N * sizeof(double));
     double *in_mem = mmap(NULL, file_size,
             PROT_READ, MAP_SHARED, in_fd, 0);

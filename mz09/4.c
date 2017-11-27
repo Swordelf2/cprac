@@ -15,7 +15,7 @@ exec_command(char *command)
     pid = fork();
     if (pid == 0) {
         execlp(command, command, NULL);
-        return 1;
+        _exit(1);
     } else if (pid == -1) {
         return 1;
     } else {

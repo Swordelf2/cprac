@@ -16,12 +16,14 @@ main(int argc, char *argv[])
             dup2(fd1, 0);
             close(fd1);
             execlp(argv[1], argv[1], NULL);
+            _exit(1);
         }
         int status;
         wait(&status); // 2
         if (WEXITSTATUS(status) == 0) {
             if (fork() == 0) { // 3
                 execlp(argv[2], argv[2], NULL);
+                _exit(1);
             }
         }
         wait(NULL); // 3
@@ -34,6 +36,7 @@ main(int argc, char *argv[])
             dup2(fd2, 1);
             close(fd2);
             execlp(argv[3], argv[3], NULL);
+            _exit(1);
         }
         close(fd[0]);
         wait(NULL); // 4

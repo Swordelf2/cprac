@@ -36,7 +36,7 @@ const RandomOperations operations = {random_generator_next, random_generator_des
 
 RandomGenerator *random_create(int seed)
 {
-    RandomGenerator *new = malloc(sizeof(*new));
+    RandomGenerator *new = calloc(1, sizeof(*new));
     new->curX = seed;
     new->ops = (void *) &operations;
     return new;

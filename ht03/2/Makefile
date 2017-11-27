@@ -1,5 +1,5 @@
 2n: 2n.c
-	gcc -g -std=gnu11 -Wall -Wextra $< -o $@
+	gcc -g -std=gnu11 -Wall -Wextra $< -lm -o $@
 
 prod: prod.c
 	gcc -g -std=gnu11 -Wall -Wextra $< -lm -o $@

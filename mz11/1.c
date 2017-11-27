@@ -4,6 +4,11 @@
 
 int a;
 
+enum
+{
+    COUNT = 5
+};
+
 void
 handler(int sig)
 {
@@ -23,7 +28,7 @@ main(void)
     sigprocmask(SIG_BLOCK, &set, &dfl_set);
     printf("%d\n", getpid());
     fflush(stdout);
-    for (a = 0; a < 5; ++a) {
+    for (a = 0; a < COUNT; ++a) {
         sigsuspend(&dfl_set);
     }
     return 0;
