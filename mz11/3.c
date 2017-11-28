@@ -49,6 +49,6 @@ start_execution(const char *file_name)
     }
     if (fork() == 0) {
         execlp(ex_name, ex_name, NULL);
-        exit(1); // LOL SHIT SON THIS IS IMPORTANT
+        _exit(1); // whoooops
     }
 }

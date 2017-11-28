@@ -5,7 +5,6 @@
 #include <sys/types.h>
 #include <stdlib.h>
 
-int opid;
 volatile int flag = 0;
 
 void
@@ -17,6 +16,7 @@ handler(int a)
 void
 work(int myid, int fd_rd, int fd_wr, int max_num, sigset_t set_prev)
 {
+    int opid;
     FILE *p_in = fdopen(fd_rd, "r");
     FILE *p_out = fdopen(fd_wr, "w");
     while (!flag) {
