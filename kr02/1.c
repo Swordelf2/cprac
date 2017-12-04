@@ -1,8 +1,12 @@
 #include <stdio.h>
+#include <linux/limits.h>
 
+// This value suffices because 
+// each string contains no more than 255 characters
+// plus a path to a file, which is no longer than PATH_MAX
 enum
 {
-    BUFF_MAX_SIZE = 8192
+    BUFF_MAX_SIZE = PATH_MAX + 256
 };
 
 int

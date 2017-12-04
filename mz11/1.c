@@ -2,7 +2,7 @@
 #include <signal.h>
 #include <unistd.h>
 
-int a;
+volatile int a;
 
 enum
 {

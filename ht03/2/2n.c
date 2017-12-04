@@ -21,7 +21,7 @@ int
 larger2power(int x);
 
 void
-MatrixMul(double *mat_dest, double *mat_src, double *mat_tmp, int N);
+MatrixMul(double *mat_dest, const double *mat_src, const double *mat_tmp, int N);
 
 
 
@@ -107,7 +107,7 @@ larger2power(int x)
 }
 
 void
-MatrixMul(double *mat_dest, double *mat1, double *mat2, int N)
+MatrixMul(double *mat_dest, const double *mat1, const double *mat2, int N)
 {
     // Put zeroes on the main diagonal
     for (int i = 0; i < N; ++i) {

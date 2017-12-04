@@ -16,7 +16,7 @@ int
 main(int argc, char *argv[])
 {
     int status;
-    volatile int fd[2];
+    int fd[2];
     pipe(fd);
     int pid = start_exec(argv[1], -1, fd[1], fd[0]);
     if (pid != -1) {

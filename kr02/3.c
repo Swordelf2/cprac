@@ -18,21 +18,17 @@ enum
 int
 main(int argc, char *argv[])
 {
-    char *arg_arr[MAX_ARG_COUNT];
     for (int i = 1; i < argc; ++i) {
         char *prog_name = argv[i];
+        char **arg_start = argv + i;
         ++i;
-        arg_arr[0] = prog_name;
-        int count = 1;
         while (argv[i] != NULL && strcmp(argv[i], "END") != 0) {
-            arg_arr[count] = argv[i];
             ++i;
-            ++count;
         }
-        arg_arr[count] = NULL;
+        argv[i] = NULL;
         
         if (fork() == 0) {
-            execvp(prog_name, arg_arr);
+            execvp(prog_name, arg_start);
             _exit(1);
         }
         int status;

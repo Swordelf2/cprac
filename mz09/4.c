@@ -21,6 +21,7 @@ exec_command(char *command)
     } else {
         int status;
         waitpid(pid, &status, 0);
+        return WIFEXITED(status) && (WEXITSTATUS(status) == 0);
         if (!WIFEXITED(status)) {
             return 1;
         }
@@ -31,7 +32,7 @@ exec_command(char *command)
 int
 main(int argc, char *argv[])
 {
-    return !((!exec_command(argv[1]) || 
-            !exec_command(argv[2])) 
-            && !exec_command(argv[3]));
+    return !((exec_command(argv[1]) ||
+            exec_command(argv[2])) &&
+            exec_command(argv[3]));
 }
