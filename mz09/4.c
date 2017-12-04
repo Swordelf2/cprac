@@ -22,10 +22,6 @@ exec_command(char *command)
         int status;
         waitpid(pid, &status, 0);
         return WIFEXITED(status) && (WEXITSTATUS(status) == 0);
-        if (!WIFEXITED(status)) {
-            return 1;
-        }
-        return WEXITSTATUS(status);
     }
 }
 
