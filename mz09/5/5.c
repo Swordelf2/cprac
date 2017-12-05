@@ -35,13 +35,14 @@ main(int argc, char *argv[])
     }
 
 
-    // Construct the script name based on pid and current time and try to create such file
+    // Construct the script name based on values from /dev/random
+    int rand_fd = open("/dev/random", O_RDONLY);
     int fd;
     char spt_name[PATH_MAX];
-    pid_t pid = getpid();
     for (int i = 0; i < MAX_TRY_COUNT; ++i) {
-        unsigned rand_val = (unsigned) pid | ((unsigned) time(NULL) ^ (i + 1));
-        snprintf(spt_name, sizeof(spt_name), "%s/tmp_script%u", spt_path, rand_val);
+        unsigned long long rand_val;
+        read(rand_fd, &rand_val, sizeof(rand_val));
+        snprintf(spt_name, sizeof(spt_name), "%s/tmp_script%llu", spt_path, rand_val);
         
         fd = open(spt_name, O_RDWR | O_CREAT | O_EXCL, 0700);
         if (fd == -1) {
@@ -53,6 +54,8 @@ main(int argc, char *argv[])
             break;
         }
     }
+    close(rand_fd);
+
     if (fd == -1) {
         fputs("Could not create script\n", stderr);
         exit(1);
