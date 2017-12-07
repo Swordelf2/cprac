@@ -31,7 +31,7 @@ main(int argc, char *argv[])
 
 
     for (int i = 0; i < count; ++i) {
-        semctl(semid, i, SETVAL, 0);
+        semctl(semid, i, SETVAL, 1);
     }
     for (int p = 0; p < nproc; ++p) {
         if (fork() == 0) {
@@ -41,13 +41,13 @@ main(int argc, char *argv[])
                 ind1 = rand() % count;
                 ind2 = rand() % count;
                 int val = rand() % 10;
-                semop(semid, (struct sembuf[]) {{.sem_num = ind1, .sem_op = 0, .sem_flg = 0},
-                        {.sem_num = ind1, .sem_op = 1, .sem_flg = 0},
-                        {.sem_num = ind2, .sem_op = 0, .sem_flg = 0},
-                        {.sem_num = ind2, .sem_op = 1, .sem_flg = 0}}, 4);
-                operation((void *) shared, ind1, ind2, val);
-                semop(semid, (struct sembuf[]) {{.sem_num = ind1, .sem_op = -1, .sem_flg = 0},
-                        {.sem_num = ind2, .sem_op = -1, .sem_flg = 0}}, 2);
+                if (ind1 != ind2) {
+                    semop(semid, (struct sembuf[]) {{.sem_num = ind1, .sem_op = -1},
+                            {.sem_num = ind2, .sem_op = -1}}, 2);
+                    operation((void *) shared, ind1, ind2, val);
+                    semop(semid, (struct sembuf[]) {{.sem_num = ind1, .sem_op = +1},
+                            {.sem_num = ind2, .sem_op = +1}}, 2);
+                }
             }
             _exit(0);
         }
