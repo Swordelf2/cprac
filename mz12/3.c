@@ -33,28 +33,30 @@ main(int argc, char *argv[])
     }
     for (int p = 0; p < count; ++p) {
         if (fork() == 0) {
-            // Down(p)
-            if ((semop(semid, 
-                    (struct sembuf[]) {{.sem_num = p, .sem_op = -1}},
-                    1)) == -1) {
-                _exit(0);
-            }
+            while (1) {
+                // Down(p)
+                if ((semop(semid, 
+                        (struct sembuf[]) {{.sem_num = p, .sem_op = -1}},
+                        1)) == -1) {
+                    _exit(0);
+                }
 
-            int x;
-            int sc_res;
-            sc_res = scanf("%d", &x);
-            if (sc_res != 1) {
-                // Abort
-                semctl(semid, 0, IPC_RMID);
-                _exit(0);
-            }
-            printf("%d %d\n", p, x);
-            fflush(stdout);
+                int x;
+                int sc_res;
+                sc_res = scanf("%d", &x);
+                if (sc_res != 1) {
+                    // Abort
+                    semctl(semid, 0, IPC_RMID);
+                    _exit(0);
+                }
+                printf("%d %d\n", p, x);
+                fflush(stdout);
 
-            //Up(x mod P)
-            semop(semid,
-                    (struct sembuf[]) {{.sem_num = rem(x, count), .sem_op = +1}},
-                    1);
+                //Up(x mod P)
+                semop(semid,
+                        (struct sembuf[]) {{.sem_num = rem(x, count), .sem_op = +1}},
+                        1);
+            }
         }
     }
 

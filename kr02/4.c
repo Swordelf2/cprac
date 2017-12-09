@@ -76,7 +76,7 @@ main(int argc, char *argv[])
                 }
                 flag = 0;
                 fputs(out_str, stdout); fflush(stdout);
-                kill(next_pid, SIGUSR2);
+                kill(next_pid, SIGUSR1);
             }
             _exit(0);
         }
