@@ -21,7 +21,7 @@ Align(size_t *total_size, size_t align)
 {
     if (*total_size & (align - 1)) {
         size_t temp = *total_size | (align - 1);
-        if (__builtin_add_overflow(*total_size, temp, total_size)) {
+        if (__builtin_uaddl_overflow(1, temp, (unsigned long *) total_size)) {
             return 0;
         }
     }
@@ -70,10 +70,10 @@ main(void)
         
 
         size_t temp;
-        if (__builtin_mul_overflow(c_size, count, &temp)) {
+        if (__builtin_umull_overflow(c_size, count, (unsigned long *) &temp)) {
             goto ploho;
         }
-        if (__builtin_add_overflow(total_size, temp, &total_size)) {
+        if (__builtin_uaddl_overflow(total_size, temp, (unsigned long *) &total_size)) {
             goto ploho;
         }
     }
