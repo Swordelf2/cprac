@@ -62,18 +62,16 @@ main(int argc, char *argv[])
     }
     FILE *spt = fdopen(fd, "w");
     fputs("#!/usr/bin/python3\n"
+            "import os\n"
             "print(", spt);
     
     for (int i = 1; i < argc - 1; ++i) {
         fprintf(spt, "%s * ", argv[i]);
     }
-    fprintf(spt, "%s)", argv[argc - 1]);
+    fprintf(spt, "%s)\n", argv[argc - 1]);
+    fprintf(spt, "os.remove(\"%s\")", spt_name);
     fclose(spt);
-
-    if (fork() == 0) {
-        execve(spt_name, (char *[]) {spt_name, NULL}, environ);
-    } 
-    wait(NULL);
-    unlink(spt_name);
-    return 0;
+    execve(spt_name, (char *[]) {spt_name, NULL}, environ);
+    fprintf(stderr, "Could not execute script: %s", strerror(errno));
+    return 1;
 }

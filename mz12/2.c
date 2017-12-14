@@ -10,8 +10,17 @@
 #include <sys/types.h>
 #include <sys/sem.h>
 
+enum
+{
+    MAX_VAL = 10
+};
+
 void
 operation(int *data, int ind1, int ind2, int val);
+
+int
+get_rand(int max);
+// Returns random int value in [0, max)
 
 int
 main(int argc, char *argv[])
@@ -37,10 +46,10 @@ main(int argc, char *argv[])
         if (fork() == 0) {
             srand(strtoul(argv[5 + p], NULL, 0));
             for (int i = 0; i < iter_count; ++i) {
-                int ind1, ind2;
-                ind1 = rand() % count;
-                ind2 = rand() % count;
-                int val = rand() % 10;
+                int ind1, ind2, val;
+                ind1 = get_rand(count);
+                ind2 = get_rand(count);
+                val = get_rand(MAX_VAL);
                 if (ind1 != ind2) {
                     semop(semid, (struct sembuf[]) {{.sem_num = ind1, .sem_op = -1},
                             {.sem_num = ind2, .sem_op = -1}}, 2);
@@ -62,4 +71,10 @@ main(int argc, char *argv[])
     munmap((void *) shared, count * sizeof(*shared));
     semctl(semid, 0, IPC_RMID);
     return 0;
+}
+
+int
+get_rand(int max)
+{
+    return (int) (max * (rand() / (RAND_MAX + 1.0)));
 }
