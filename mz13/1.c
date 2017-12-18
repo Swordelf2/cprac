@@ -13,8 +13,11 @@ typedef struct Type
 {
     size_t size;
     size_t align;
-    char name[NAME_SIZE];
+    char *name;
 } Type;
+
+char *
+get_string(void);
 
 int
 Align(size_t *total_size, size_t align)
@@ -31,12 +34,12 @@ Align(size_t *total_size, size_t align)
 int
 main(void)
 {
-    char str[BUF_SIZE];
+    char *str;
     size_t max_size = 16;
     size_t size = 0;
     Type *types = malloc(max_size * sizeof(*types));
 
-    while (strcmp(fgets(str, sizeof(str), stdin), "END\n") != 0) {
+    while (strcmp(get_string(), "END\n") != 0) {
         sscanf(str, "%s %zu %zu", types[size].name, &types[size].size, &types[size].align);
         ++size;
         if (size >= max_size) {
@@ -47,9 +50,8 @@ main(void)
     size_t max_align = 0;
     size_t total_size = 0;
     int empty = 1;
-    while (fgets(str, sizeof(str), stdin)) {
+    while (str = get_string()) {
         empty = 0;
-        char name[NAME_SIZE];
         size_t count;
         sscanf(str, "%s %zu", name, &count);
         size_t c_size = 0, c_align = 0;
@@ -93,4 +95,13 @@ main(void)
 ploho:
     printf("0 0\n");
     return 0;
+}
+
+char *
+get_string(void)
+{
+    static char *str = NULL;
+    static size_t n = 0;
+    ssize_t res = getline(&str, &n, stdin);
+    return (res > 0) ? str : NULL;
 }
