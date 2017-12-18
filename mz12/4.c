@@ -5,17 +5,22 @@
 #include <string.h>
 
 #include <unistd.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+
+struct Data
+{
+    pid_t pid;
+    int id;
+};
 
 enum
 {
     MAX_FILES = 1024,
-    TEMPLATE_LEN = 1 + 3 + 1 + 3 + 6
 };
 
-const char template[] = "/tmp/huyXXXXXX";
-
 void
-process(int fd1_in, int fd2_in, int fd_out);
+process(FILE *f1, FILE *f2, FILE *f_out);
 
 static inline int32_t
 get_next(FILE *f, int *flag);
@@ -26,28 +31,92 @@ TextToBin(FILE *in, int out_fd);
 int
 main(int argc, char *argv[])
 {
-    FILE *f_in[MAX_FILES];
-    int fd[MAX_FILES];
-    for (int i = 0; i < argc - 1; ++i) {
-        f_in[i] = fopen(argv[i + 1], "r");
+    int file_count = argc - 1;
+    // tmp_names[i] is the name of the resulting file of the i-th process
+    tmp_names[MAX_FILES];
+    for (int i = 0; i < file_count; ++i) {
+        // Create temporary files and write data into them
+        tmp_names[i] = strdup(tmpnam(NULL));
+        FILE *f_in = fopen(argv[i], "r");
+        FILE *f_out = fopen(tmp_names[i], "w+");
+        int32_t x;
+        while (fscanf(f_in, "%"SCNd32, &x) == 1) {
+            fwrite(&x, sizeof(x), 1, f_out);
+        }
+        fclose(f_in);
+        fclose(f_out);
     }
-    char tmp_name[TEMPLATE_LEN + 1];
-    int file_count = 0;
-    for (int i = 0; i < argc - 1; ++i) {
-        strcpy(tmp_name, template);
-        fd[i] = mkstemp(
-        TextToBin(f_in[i], fd[i]);
+
+    int fd[2];
+    pipe(fd);
+
+    int files_left = file_count;
+   
+    // Start all the initial processes
+    for (int i = 0; i < file_count - 1; i += 2) {
+        char *new_name = strdup(tmpnam(NULL));
+        execute_work(tmp_names[i], tmp_names[i + 1], new_name);
+        free(tmp_names[i]);
+        free(tmp_names[i + 1]);
+        tmp_names[i] = new_name;
+    }
+
+    // If there is still one file left
+    if (file_count % 2 && file_count != 1) {
+        struct Data data;
+        read(fd[0], &data, sizeof(data));
+        waitpid(data.pid, NULL, 0);
+        char *new_name = strdup(tmpnam(NULL));
+        execute_work(tmp_names[data.id], tmp_names[file_count - 1], data.id, fd);
+    }
+
+    while (files_left > 1) {
+        struct Data data[2];
+        // We wait until two processes are finished
+        read(fd[0], &data[0], sizeof(data[0]));
+        --files_left;
+        if (files_left <= 1) {
+            break;
+        }
+        read(fd[0], &data[1], sizeof(data[1]));
+        --files_left;
+        waitpid(data[0].pid, NULL, 0);
+        waitpid(data[1].pid, NULL, 0);
+        
+        // Create new temp name and connect the resulting two files+
+        // of the children we have waited for
+        char *new_name = strdup(tmpnam(NULL));
+        execute_work(tmp_names[data[0].id], tmp_names[data[1].id], data[0].id, fd[1]);
+        free(tmp_names[data[0].id]);
+        free(tmp_names[data[1].id]);
+        tmp_names[data[0].id] = new_name;
+    }
     
     return 0;
 }
 
 void
-process(int fd1_in, int fd2_in, int fd_out)
+execute_work(const char *name1, const char *name2, int id, int p_out)
 {
-    FILE *f1 = fdopen(fd1_in, "r");
-    FILE *f2 = fdopen(fd2_in, "r");
-    FILE *f_out = fdopen(fd_out, "w");
+    if (fork() == 0) {
+        FILE *f1 = fopen(name1, "r");
+        FILE *f2 = fopen(name2, "r");
+        FILE *f_out = fopen(name_out, "w+");
+        process(f1, f2, f_out);
+        fclose(f1);
+        fclose(f2);
+        fclose(f_out);
+        struct Data data;
+        data.pdi = getpid();
+        data.id = id;
+        write(p_out, &data, sizeof(data));
+        _exit(0);
+    }
+}
 
+void
+process(FILE *f1, FILE *f2, FILE *f_out)
+{
     int flag = 1;
     while (flag) {
         int32_t x, y;
@@ -65,9 +134,6 @@ process(int fd1_in, int fd2_in, int fd_out)
             }
         }
     }
-    fclose(f1);
-    fclose(f2);
-    fclose(f_out);
 }
 
 static inline int32_t
@@ -89,4 +155,5 @@ TextToBin(FILE *in, int out_fd)
     while (fscanf(in, "%"SCNd32, &x) == 1) {
         fwrite(&x, sizeof(x), 1, out);
     }
-    fclose(
+    fclose(out);
+}

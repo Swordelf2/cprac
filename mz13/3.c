@@ -12,29 +12,31 @@ int
 main(int argc, char *argv[])
 {
     int port = strtol(argv[1], NULL, 0);
-    int listenfd = socket(AF_INET, SOCK_STREAM, 0);
-    struct sockaddr_in serv_addr =
+    int list_fd = socket(AF_INET, SOCK_STREAM, 0);
+    struct sockaddr_in myaddr =
     {
         .sin_family = AF_INET,
         .sin_port = htons(port),
-        .sin_addr.s_addr = htonl(INADDR_ANY)
+        .sin_addr.s_addr = INADDR_ANY
     };
-    bind(listenfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr));
+    bind(list_fd, (struct sockaddr *) &myaddr, sizeof(myaddr));
 
-    listen(listenfd, 0);
-    int clifd;
+    listen(list_fd, 0);
+    int client_fd;
     long long sum = 0;
     while (1) {
-        clifd = accept(listenfd, NULL, NULL);
-        int x;
-        read(clifd, &x, sizeof(x));
-        x = htonl(x);
+        client_fd = accept(listenfd, NULL, NULL);
+        int32_t x;
+        read(client_fd, &x, sizeof(x));
+        x = ntohl(x);
         if (x == 0) {
+            close(client_fd);
             break;
         }
         sum += x;
-        close(clifd);
+        close(client_fd);
     }
     printf("%lld\n", sum);
+    close(listenfd);
     return 0;
 }

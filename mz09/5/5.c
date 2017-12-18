@@ -44,7 +44,7 @@ main(int argc, char *argv[])
         read(rand_fd, &rand_val, sizeof(rand_val));
         snprintf(spt_name, sizeof(spt_name), "%s/tmp_script%llu", spt_path, rand_val);
         
-        fd = open(spt_name, O_RDWR | O_CREAT | O_EXCL, 0700);
+        fd = open(spt_name, O_WRONLY | O_CREAT | O_EXCL, 0700);
         if (fd == -1) {
             if (errno != EEXIST) {
                 fprintf(stderr, "Error while trying to create script: %s\n", strerror(errno));
